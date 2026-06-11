@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulator Kurva Kelompok</title>
+</head>
+<body>
+
+
+    <div>
+        <h1>SIMULATOR KURVA PARAMETRIK</h1>
+        <p>Tugas Kelompok Grafika Komputer</p>
+        <p>Tim: Farah, Zuhair, Daffa, Rifki</p>
+    </div>
+    <hr>
+
+
+    <div>
+        <h3>1. Pilih Bidang Geometri:</h3>
+        <button onclick="selectBidang('lingkaran', this)">LINGKARAN</button>
+        <button onclick="selectBidang('elips', this)">ELIPS</button>
+        <button onclick="selectBidang('parabola', this)">PARABOLA</button>
+        <button onclick="selectBidang('hyperbola', this)">HIPERBOLA</button>
+    </div>
+    <br>
+
+
+    <div>
+        <h3>2. Input Nilai Parameter:</h3>
+        <div id="form-inputs">
+            <label>Pusat Xc:</label> <input type="number" id="inp-xc" value="0"><br><br>
+            <label>Pusat Yc:</label> <input type="number" id="inp-yc" value="0"><br><br>
+            <label>Jari-jari (R):</label> <input type="number" id="inp-r" value="120">
+        </div>
+    </div>
+    <br>
+
+
+    <div>
+        <h3>3. Pengaturan Iterasi:</h3>
+        <label>Faktor Langkah (Step Δ):</label>
+        <input type="number" id="param-step" value="0.02" step="0.01">
+    </div>
+    <br>
+
+
+    <div>
+        <button onclick="renderEngine()" style="padding: 10px 20px; font-weight: bold;">HITUNG & GAMBAR KURVA</button>
+    </div>
+    <hr>
+
+
+    <div>
+        <h3>Layar Canvas Utama</h3>
+        <div style="font-size: 12px; margin-bottom: 5px;">
+            Kurva: <span id="stat-type">LINGKARAN</span> |
+            Waktu: <span id="stat-time">0.00 ms</span> |
+            Total Titik: <span id="stat-count">0</span>
+        </div>
+        <canvas id="mainCanvas" width="600" height="450" style="border: 1px solid black; background-color: #fafafa;"></canvas>
+    </div>
+    <hr>
+
+
+    <div>
+        <h3>Aliran Koordinat Output (Log Stream)</h3>
+        <div id="logStream" style="border: 1px solid gray; height: 150px; overflow-y: scroll; padding: 5px; font-family: monospace; font-size: 12px;">
+            Sistem siap. Jalankan render untuk melihat kalkulasi matriks.
+        </div>
+    </div>
+
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        let currentBidang = 'lingkaran';
+
+
+ 
+        const konfigurasiBidang = {
+            lingkaran: `
+                <label>Pusat Xc:</label> <input type="number" id="inp-xc" value="0"><br><br>
+                <label>Pusat Yc:</label> <input type="number" id="inp-yc" value="0"><br><br>
+                <label>Jari-jari (R):</label> <input type="number" id="inp-r" value="120">
+            `
+        };
+
+
+        
+        function selectBidang(bidang, elemen) {
+            currentBidang = bidang;
+            alert("Tab " + bidang.toUpperCase() + " dipilih. Logika pergantian form diurus Daffa.");
+        }
+
+
+        
+        function drawRadarGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height/2); ctx.lineTo(canvas.width, canvas.height/2);
+            ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height);
+            ctx.strokeStyle = "#ccc";
+            ctx.stroke();
+        }
+
+
+        
+        function renderEngine() {
+            alert("Tombol ditekan! Mesin hitung matematis belum dimasukkan oleh Farah.");
+        }
+
+
+        window.onload = () => {
+            drawRadarGrid();
+        };
+    </script>
+</body>
+</html>
+
+
