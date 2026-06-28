@@ -1,143 +1,352 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulator Kurva Kelompok</title>
+    <title>Sistem Generator Kurva Parametrik - Tim Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-sidebar: #111827;
+            --bg-card: #1f2937;
+            --accent-neon: #10b981;
+            --accent-blue: #3b82f6;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #374151;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        .sidebar {
+            width: 400px; min-width: 400px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; padding: 25px; overflow-y: auto; gap: 20px;
+        }
+        
+        .header-app { 
+            border-bottom: 2px dashed var(--border); 
+            padding-bottom: 15px; 
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .header-app h1 { font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+        .header-app p { font-size: 11px; color: var(--accent-neon); font-family: 'JetBrains Mono', monospace; text-transform: uppercase; }
+        
+        .badge-status { 
+            align-self: flex-start;
+            background: rgba(16, 185, 129, 0.1); 
+            color: var(--accent-neon); 
+            border: 1px solid var(--accent-neon); 
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; 
+            font-weight: bold; 
+            margin-top: 4px;
+        }
+        
+        .grid-tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .tab-btn {
+            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted);
+            padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px;
+            transition: all 0.3s ease; text-align: center;
+        }
+        .tab-btn:hover { border-color: var(--accent-blue); color: #fff; }
+        .tab-btn.active { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border-color: #3b82f6; box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+
+        .algo-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .algo-title { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent-neon); font-weight: bold; margin-bottom: 15px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+        .algo-title::before { content: '■'; color: var(--accent-neon); }
+
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; }
+        .form-grid .full-width { grid-column: span 2; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+        .form-group.full-width { grid-column: span 2; width: 100%; }
+        
+        label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        input {
+            width: 100%; background: var(--bg-main); border: 1px solid var(--border); color: white;
+            padding: 10px 12px; border-radius: 6px; font-size: 14px; font-family: 'JetBrains Mono', monospace;
+            outline: none; transition: all 0.2s; box-sizing: border-box;
+        }
+        input:focus { border-color: var(--accent-neon); box-shadow: 0 0 0 2px rgba(16,185,129,0.2); }
+
+        .btn-render {
+            background: linear-gradient(135deg, #10b981, #059669); color: #0b0f19; border: none;
+            padding: 14px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer;
+            transition: all 0.2s; box-shadow: 0 4px 14px rgba(16,185,129,0.3); width: 100%;
+            text-transform: uppercase; letter-spacing: 0.5px; margin-top: 10px;
+        }
+        .btn-render:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16,185,129,0.4); }
+
+        .main-panel { flex-grow: 1; display: flex; flex-direction: column; padding: 25px; gap: 20px; height: 100vh; justify-content: center; }
+        .display-container {
+            width: 100%; height: 100%; background: var(--bg-sidebar); border: 1px solid var(--border);
+            border-radius: 16px; display: flex; justify-content: center; align-items: center;
+            position: relative; box-shadow: inset 0 4px 20px rgba(0,0,0,0.5); overflow: hidden;
+        }
+        canvas { display: block; border-radius: 8px; max-width: 100%; max-height: 100%; }
+        
+        .canvas-stats {
+            position: absolute; top: 15px; left: 15px; background: rgba(11,15,25,0.85);
+            border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px;
+            font-family: 'JetBrains Mono', monospace; font-size: 11px; display: flex; gap: 15px; z-index: 10;
+        }
+        .stat-item span { color: var(--accent-neon); }
+
+        .log-panel {
+            width: 320px; min-width: 320px; background-color: var(--bg-sidebar); border-left: 1px solid var(--border);
+            display: flex; flex-direction: column; padding: 25px; height: 100vh; gap: 15px;
+        }
+        .log-panel h3 { font-size: 12px; text-transform: uppercase; color: var(--text-main); letter-spacing: 0.5px; border-bottom: 1px dashed var(--border); padding-bottom: 10px; }
+        .log-stream {
+            flex-grow: 1; background: var(--bg-main); border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px; overflow-y: scroll; font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; color: #34d399; display: flex; flex-direction: column; gap: 6px;
+        }
+        .log-stream::-webkit-scrollbar { width: 6px; }
+        .log-stream::-webkit-scrollbar-track { background: var(--bg-main); }
+        .log-stream::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .log-stream::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+
+        .log-unit { background: rgba(31,41,55,0.6); padding: 6px 10px; text-align: left; border-radius: 4px; border: 1px solid rgba(255,255,255,0.02); display: flex; justify-content: space-between; }
+        .log-unit .idx { color: var(--text-muted); }
+    </style>
 </head>
 <body>
 
-
-    <div>
-        <h1>SIMULATOR KURVA PARAMETRIK</h1>
-        <p>Tugas Kelompok Grafika Komputer</p>
-        <p>Tim: Farah, Zuhair, Daffa, Rifki</p>
-    </div>
-    <hr>
-
-
-    <div>
-        <h3>1. Pilih Bidang Geometri:</h3>
-        <button onclick="selectBidang('lingkaran', this)">LINGKARAN</button>
-        <button onclick="selectBidang('elips', this)">ELIPS</button>
-        <button onclick="selectBidang('parabola', this)">PARABOLA</button>
-        <button onclick="selectBidang('hyperbola', this)">HIPERBOLA</button>
-    </div>
-    <br>
-
-
-    <div>
-        <h3>2. Input Nilai Parameter:</h3>
-        <div id="form-inputs">
-            <label>Pusat Xc:</label> <input type="number" id="inp-xc" value="0"><br><br>
-            <label>Pusat Yc:</label> <input type="number" id="inp-yc" value="0"><br><br>
-            <label>Jari-jari (R):</label> <input type="number" id="inp-r" value="120">
+    <div class="sidebar">
+        <div class="header-app">
+            <h1>SIMULATOR KURVA</h1>
+            <p>TUGAS KELOMPOK GRAFIKA KOMPUTER</p>
+            <div class="badge-status">Farah, Zuhair, Daffa, Rifki</div>
         </div>
-    </div>
-    <br>
 
-
-    <div>
-        <h3>3. Pengaturan Iterasi:</h3>
-        <label>Faktor Langkah (Step Δ):</label>
-        <input type="number" id="param-step" value="0.02" step="0.01">
-    </div>
-    <br>
-
-
-    <div>
-        <button onclick="renderEngine()" style="padding: 10px 20px; font-weight: bold;">HITUNG & GAMBAR KURVA</button>
-    </div>
-    <hr>
-
-
-    <div>
-        <h3>Layar Canvas Utama</h3>
-        <div style="font-size: 12px; margin-bottom: 5px;">
-            Kurva: <span id="stat-type">LINGKARAN</span> |
-            Waktu: <span id="stat-time">0.00 ms</span> |
-            Total Titik: <span id="stat-count">0</span>
+        <div class="form-group">
+            <label>1. Target Bidang Geometri</label>
+            <div class="grid-tabs">
+                <button class="tab-btn active" onclick="selectBidang('lingkaran', this)">LINGKARAN</button>
+                <button class="tab-btn" onclick="selectBidang('elips', this)">ELIPS</button>
+                <button class="tab-btn" onclick="selectBidang('parabola', this)">PARABOLA</button>
+                <button class="tab-btn" onclick="selectBidang('hyperbola', this)">HIPERBOLA</button>
+            </div>
         </div>
-        <canvas id="mainCanvas" width="600" height="450" style="border: 1px solid black; background-color: #fafafa;"></canvas>
-    </div>
-    <hr>
 
+        <div class="algo-section">
+            <div class="algo-title">Tahap 1: Inisialisasi & Batas Parameter</div>
+            <div id="form-inputs" class="form-grid"></div>
+        </div>
 
-    <div>
-        <h3>Aliran Koordinat Output (Log Stream)</h3>
-        <div id="logStream" style="border: 1px solid gray; height: 150px; overflow-y: scroll; padding: 5px; font-family: monospace; font-size: 12px;">
-            Sistem siap. Jalankan render untuk melihat kalkulasi matriks.
+        <div class="algo-section">
+            <div class="algo-title">Tahap 2 & 3: Iterasi & Kepadatan</div>
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label>Faktor Langkah Kepadatan (Step Δ)</label>
+                    <input type="number" id="param-step" value="0.02" step="0.01" min="0.001" max="1.5">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Tahap 4: Eksekusi Grafis</label>
+            <button class="btn-render" onclick="renderEngine()">HITUNG & GAMBAR KURVA</button>
         </div>
     </div>
 
+    <div class="main-panel">
+        <div class="display-container">
+            <div class="canvas-stats">
+                <div class="stat-item">KURVA: <span id="stat-type">LINGKARAN</span></div>
+                <div class="stat-item">WAKTU PROSES: <span id="stat-time">0.00 ms</span></div>
+                <div class="stat-item">TOTAL TITIK (N): <span id="stat-count">0</span></div>
+            </div>
+            <canvas id="mainCanvas" width="600" height="450"></canvas>
+        </div>
+    </div>
+
+    <div class="log-panel">
+        <h3>Aliran Koordinat (Output)</h3>
+        <div id="logStream" class="log-stream">
+            <div style="color: var(--text-muted); font-style: italic; font-size: 11px;">Sistem siap. Jalankan render untuk melihat kalkulasi matriks.</div>
+        </div>
+    </div>
 
     <script>
         const canvas = document.getElementById('mainCanvas');
         const ctx = canvas.getContext('2d');
         let currentBidang = 'lingkaran';
 
-
- 
         const konfigurasiBidang = {
             lingkaran: `
-                <label>Pusat Xc:</label> <input type="number" id="inp-xc" value="0"><br><br>
-                <label>Pusat Yc:</label> <input type="number" id="inp-yc" value="0"><br><br>
-                <label>Jari-jari (R):</label> <input type="number" id="inp-r" value="120">
+                <div class="form-group"><label>Pusat Xc</label><input type="number" id="inp-xc" value="0"></div>
+                <div class="form-group"><label>Pusat Yc</label><input type="number" id="inp-yc" value="0"></div>
+                <div class="form-group"><label>Jari-jari (R)</label><input type="number" id="inp-r" value="120"></div>
+                <div class="form-group"><label>Batas Sudut Max (Rad)</label><input type="number" id="inp-max-theta" value="6.28" step="0.01"></div>
+            `,
+            elips: `
+                <div class="form-group"><label>Pusat Xc</label><input type="number" id="inp-xc" value="0"></div>
+                <div class="form-group"><label>Pusat Yc</label><input type="number" id="inp-yc" value="0"></div>
+                <div class="form-group"><label>Sumbu Mayor (A)</label><input type="number" id="inp-a" value="160"></div>
+                <div class="form-group"><label>Sumbu Minor (B)</label><input type="number" id="inp-b" value="90"></div>
+                <div class="form-group full-width"><label>Batas Sudut Max (Rad)</label><input type="number" id="inp-max-theta" value="6.28" step="0.01"></div>
+            `,
+            parabola: `
+                <div class="form-group"><label>Puncak Xp</label><input type="number" id="inp-xp" value="0"></div>
+                <div class="form-group"><label>Puncak Yp</label><input type="number" id="inp-yp" value="-100"></div>
+                <div class="form-group"><label>Intensitas (A)</label><input type="number" id="inp-a" value="0.008" step="0.001"></div>
+                <div class="form-group"><label>Batas Rentang T</label><input type="number" id="inp-range-t" value="250"></div>
+            `,
+            hyperbola: `
+                <div class="form-group"><label>Pusat Xc</label><input type="number" id="inp-xc" value="0"></div>
+                <div class="form-group"><label>Pusat Yc</label><input type="number" id="inp-yc" value="0"></div>
+                <div class="form-group"><label>Konstanta A</label><input type="number" id="inp-a" value="50"></div>
+                <div class="form-group"><label>Konstanta B</label><input type="number" id="inp-b" value="40"></div>
+                <div class="form-group full-width"><label>Batas Sudut Asimtot (Rad)</label><input type="number" id="inp-max-theta" value="1.3" step="0.05" min="0.1" max="1.54"></div>
             `
         };
 
-
-        
         function selectBidang(bidang, elemen) {
             currentBidang = bidang;
-            alert("Tab " + bidang.toUpperCase() + " dipilih. Logika pergantian form diurus Daffa.");
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            elemen.classList.add('active');
+            memuatFormInput();
         }
 
+        function memuatFormInput() {
+            document.getElementById('form-inputs').innerHTML = konfigurasiBidang[currentBidang];
+        }
 
-        
         function drawRadarGrid() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-           
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
 
-
-            ctx.strokeStyle = '#e2e8f0';
+            ctx.strokeStyle = '#1e293b';
             ctx.lineWidth = 1;
             for(let r = 50; r < canvas.width; r += 50) {
-                ctx.beginPath();
-                ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-                ctx.stroke();
+                ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI); ctx.stroke();
             }
 
-            ctx.strokeStyle = '#64748b'; 
-            ctx.lineWidth = 2;
-           
-            ctx.beginPath();
-            ctx.moveTo(0, cy);
-            ctx.lineTo(canvas.width, cy);
-            ctx.stroke();
-           
-            ctx.beginPath();
-            ctx.moveTo(cx, 0);
-            ctx.lineTo(cx, canvas.height);
-            ctx.stroke();
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(canvas.width, cy); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, canvas.height); ctx.stroke();
         }
 
+        function jalankanClippingFilter(x, y) {
+            return { x: x, y: y, isLolosSensor: true };
+        }
 
-
-        
         function renderEngine() {
-            alert("Tombol ditekan! Mesin hitung matematis belum dimasukkan oleh Farah.");
-        }
+            const t0 = performance.now();
+            drawRadarGrid();
 
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const step = parseFloat(document.getElementById('param-step').value) || 0.05;
+            let points = [];
+
+            if (currentBidang === 'lingkaran') {
+                const xc = parseFloat(document.getElementById('inp-xc').value) || 0;
+                const yc = parseFloat(document.getElementById('inp-yc').value) || 0;
+                const r = parseFloat(document.getElementById('inp-r').value) || 50;
+                const maxTheta = parseFloat(document.getElementById('inp-max-theta').value) || 6.28;
+
+                for (let theta = 0; theta <= maxTheta; theta += step) {
+                    points.push({ x: xc + r * Math.cos(theta), y: yc + r * Math.sin(theta) });
+                }
+            } 
+            else if (currentBidang === 'elips') {
+                const xc = parseFloat(document.getElementById('inp-xc').value) || 0;
+                const yc = parseFloat(document.getElementById('inp-yc').value) || 0;
+                const a = parseFloat(document.getElementById('inp-a').value) || 50;
+                const b = parseFloat(document.getElementById('inp-b').value) || 30;
+                const maxTheta = parseFloat(document.getElementById('inp-max-theta').value) || 6.28;
+
+                for (let theta = 0; theta <= maxTheta; theta += step) {
+                    points.push({ x: xc + a * Math.cos(theta), y: yc + b * Math.sin(theta) });
+                }
+            } 
+            else if (currentBidang === 'parabola') {
+                const xp = parseFloat(document.getElementById('inp-xp').value) || 0;
+                const yp = parseFloat(document.getElementById('inp-yp').value) || 0;
+                const a = parseFloat(document.getElementById('inp-a').value) || 0.01;
+                const rangeT = parseFloat(document.getElementById('inp-range-t').value) || 250;
+
+                for (let t = -rangeT; t <= rangeT; t += (step * rangeT * 0.4)) {
+                    points.push({ x: xp + t, y: yp + (a * t * t) });
+                }
+            } 
+            else if (currentBidang === 'hyperbola') {
+                const xc = parseFloat(document.getElementById('inp-xc').value) || 0;
+                const yc = parseFloat(document.getElementById('inp-yc').value) || 0;
+                const a = parseFloat(document.getElementById('inp-a').value) || 40;
+                const b = parseFloat(document.getElementById('inp-b').value) || 30;
+                const maxTheta = parseFloat(document.getElementById('inp-max-theta').value) || 1.3;
+
+                for (let theta = -maxTheta; theta <= maxTheta; theta += step) {
+                    points.push({ x: xc + a * (1 / Math.cos(theta)), y: yc + b * Math.tan(theta) });
+                }
+                if(points.length > 0) points[points.length - 1].breakLine = true;
+                
+                for (let theta = -maxTheta; theta <= maxTheta; theta += step) {
+                    points.push({ x: xc - a * (1 / Math.cos(theta)), y: yc + b * Math.tan(theta) });
+                }
+            }
+
+            ctx.strokeStyle = '#10b981';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#10b981';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+
+            let isFirstPointValid = true;
+
+            points.forEach((p) => {
+                let clippedData = jalankanClippingFilter(p.x, p.y);
+
+                if (clippedData.isLolosSensor) {
+                    const screenX = cx + clippedData.x;
+                    const screenY = cy - clippedData.y;
+                    
+                    if (isFirstPointValid || p.breakLine) {
+                        ctx.moveTo(screenX, screenY);
+                        isFirstPointValid = false;
+                    } else {
+                        ctx.lineTo(screenX, screenY);
+                    }
+                } else {
+                    isFirstPointValid = true;
+                }
+            });
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            const t1 = performance.now();
+            document.getElementById('stat-type').innerText = currentBidang.toUpperCase();
+            document.getElementById('stat-time').innerText = `${(t1 - t0).toFixed(2)} ms`;
+            document.getElementById('stat-count').innerText = points.length;
+
+            const logBox = document.getElementById('logStream');
+            logBox.innerHTML = '';
+            let validIdx = 1;
+            points.forEach(p => {
+                if(!p.breakLine) {
+                    const node = document.createElement('div');
+                    node.className = 'log-unit';
+                    node.innerHTML = `<span class="idx">#${validIdx++}</span> <span>X:${p.x.toFixed(1)}, Y:${p.y.toFixed(1)}</span>`;
+                    logBox.appendChild(node);
+                }
+            });
+        }
 
         window.onload = () => {
+            memuatFormInput();
             drawRadarGrid();
         };
     </script>
 </body>
 </html>
-
-
