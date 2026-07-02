@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Kurva Parametrik - Final Edition</title>
+    <style>
+        :root {
+            --bg-body: #0f172a;       /* Slate 900 */
+            --bg-panel: #1e293b;      /* Slate 800 */
+            --bg-input: #334155;      /* Slate 700 */
+            --text-main: #f8fafc;     /* Slate 50 */
+            --text-dim: #94a3b8;      /* Slate 400 */
+            --accent-primary: #6366f1;/* Indigo 500 */
+            --accent-hover: #4f46e5;  /* Indigo 600 */
+            --border-color: #334155;
+            
+            --curve-c1: #fbbf24;      /* Amber 400 */
+            --curve-c2: #10b981;      /* Emerald 500 */
+            --curve-c3: #38bdf8;      /* Sky 400 */
+            --btn-danger: #ef4444;    /* Red 500 */
+            --btn-success: #10b981;   /* Emerald 500 */
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- SIDEBAR KIRI --- */
+        .sidebar { width: 290px; min-width: 290px; background-color: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px; overflow-y: auto; gap: 16px; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
+        .header-app { border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+        .header-app h1 { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: var(--text-main); }
+        .header-app p { font-size: 11px; color: var(--text-dim); }
+        
+        .team-box { background: var(--bg-input); border-radius: 6px; padding: 10px; font-size: 10px; color: var(--text-dim); margin-top: 10px; line-height: 1.4; }
+        .team-box span { color: var(--accent-primary); font-weight: 600; font-size: 11px; }
+
+        .grid-tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .tab-btn { background: transparent; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-dim); padding: 8px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.2s; }
+        .tab-btn:hover { border-color: var(--accent-primary); color: var(--text-main); }
+        .tab-btn.active { background: var(--accent-primary); color: #fff; border-color: var(--accent-primary); }
+
+        .algo-section { display: flex; flex-direction: column; gap: 8px; }
+        .algo-title { font-size: 12px; font-weight: 600; color: var(--text-main); border-left: 3px solid var(--accent-primary); padding-left: 8px; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .form-grid .full-width { grid-column: span 2; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        label { font-size: 10px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; }
+        input { width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-main); padding: 8px; font-size: 12px; outline: none; transition: 0.2s; }
+        input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
+
+        /* KOTAK RUMUS (CHEAT SHEET PRESENTASI) */
+        .rumus-box { background: rgba(15, 23, 42, 0.6); border: 1px dashed var(--accent-primary); border-radius: 6px; padding: 10px; font-family: 'Courier New', Courier, monospace; font-size: 10px; color: var(--curve-c3); line-height: 1.5; margin-top: 5px; }
+
+        .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+        .btn-render { background: var(--accent-primary); color: white; border: none; border-radius: 6px; padding: 12px; font-weight: 600; font-size: 12px; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-render:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        
+        .btn-row { display: flex; gap: 8px; }
+        .btn-clear { flex: 1; background: transparent; border: 1px solid var(--btn-danger); color: var(--btn-danger); border-radius: 6px; padding: 8px; font-size: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .btn-clear:hover { background: var(--btn-danger); color: white; }
+        .btn-export { flex: 1; background: transparent; border: 1px solid var(--btn-success); color: var(--btn-success); border-radius: 6px; padding: 8px; font-size: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .btn-export:hover { background: var(--btn-success); color: white; }
+
+        /* --- PANEL TENGAH (CANVAS) --- */
+        .main-panel { flex: 1; display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: center; gap: 20px; padding: 20px; overflow-y: auto; background-color: var(--bg-body); }
+        .display-container { flex: 1 1 350px; max-width: 450px; aspect-ratio: 1 / 1; background: #161f30; border: 1px solid var(--border-color); border-radius: 8px; position: relative; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; }
+        canvas { width: 100%; height: 100%; object-fit: contain; }
+        .canvas-stats { position: absolute; top: 12px; left: 12px; background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-color); border-radius: 4px; padding: 6px 10px; font-size: 10px; font-weight: 600; z-index: 10; backdrop-filter: blur(4px); }
+        .c1-title { color: var(--curve-c1); } .c2-title { color: var(--curve-c2); } .c3-title { color: var(--curve-c3); }
+
+        /* --- SIDEBAR KANAN (TABEL) --- */
+        .table-panel { width: 320px; min-width: 320px; background-color: var(--bg-panel); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; height: 100vh; z-index: 10; box-shadow: -2px 0 10px rgba(0,0,0,0.3); }
+        .table-header-section { padding: 20px; border-bottom: 1px solid var(--border-color); }
+        .table-header-section h3 { font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text-main); }
+        .summary-box { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .summary-item { background: var(--bg-input); padding: 8px; border-radius: 6px; display: flex; flex-direction: column; gap: 2px; border: 1px solid var(--border-color); }
+        .summary-item span { color: var(--text-dim); font-size: 9px; font-weight: 600; text-transform: uppercase; }
+        .summary-item b { font-size: 12px; color: var(--text-main); }
+
+        .table-wrapper { flex-grow: 1; overflow-y: auto; padding: 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
+        thead { position: sticky; top: 0; background: var(--bg-input); z-index: 5; }
+        th, td { border-bottom: 1px solid var(--border-color); padding: 8px 12px; vertical-align: top; }
+        th { color: var(--text-dim); font-weight: 600; font-size: 10px; }
+        .col-sub { font-family: 'Courier New', Courier, monospace; color: #a78bfa; font-size: 10px; line-height: 1.5; } 
+        .col-res { font-family: 'Courier New', Courier, monospace; color: var(--curve-c2); font-weight: bold; font-size: 10px; line-height: 1.5; }
+        .row-alt { background-color: rgba(255, 255, 255, 0.02); }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: var(--bg-body); } ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="header-app">
+            <h1>Sistem Kurva Parametrik</h1>
+            <p>Visualisasi & Analisis Komputasi</p>
+            <div class="team-box">Tim Pengembang:<br><span>Farah, Zuhair, Daffa, Rifki</span></div>
+        </div>
+        
+        <div class="grid-tabs">
+            <button class="tab-btn active" onclick="selectBidang('lingkaran', this)">Lingkaran</button>
+            <button class="tab-btn" onclick="selectBidang('elips', this)">Elips</button>
+            <button class="tab-btn" onclick="selectBidang('parabola', this)">Parabola</button>
+            <button class="tab-btn" onclick="selectBidang('hyperbola', this)">Hiperbola</button>
+        </div>
+
+        <div class="algo-section">
+            <div class="algo-title">Variabel Konstanta</div>
+            <div id="form-inputs" class="form-grid"></div>
+        </div>
+
+        <div class="algo-section">
+            <div class="algo-title">Parameter Diskrit</div>
+            <div class="form-group"><label>Langkah Delta (Step)</label><input type="number" id="param-step" value="0.01" step="0.01" min="0.001"></div>
+        </div>
+        
+        <div class="algo-section">
+            <div class="algo-title">Model Matematika (Aktif)</div>
+            <div id="rumus-display" class="rumus-box">Pilih kurva untuk melihat representasi matematis.</div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-render" onclick="renderEngine()">Eksekusi Render</button>
+            <div class="btn-row">
+                <button class="btn-clear" onclick="clearAllCanvas()">Bersihkan</button>
+                <button class="btn-export" onclick="exportCanvas()">Simpan Kurva</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-panel">
+        <div class="display-container">
+            <div class="canvas-stats c1-title">T1: NODE & SPASIAL</div>
+            <canvas id="canvas1" width="600" height="600"></canvas>
+        </div>
+        <div class="display-container">
+            <div class="canvas-stats c2-title">T2: TOPOLOGI RASTER</div>
+            <canvas id="canvas2" width="600" height="600"></canvas>
+        </div>
+        <div class="display-container">
+            <div class="canvas-stats c3-title">T3: KURVA KONTINU (UTAMA)</div>
+            <canvas id="canvas3" width="600" height="600"></canvas>
+        </div>
+    </div>
+
+    <div class="table-panel">
+        <div class="table-header-section">
+            <h3>Metrik Komputasi</h3>
+            <div class="summary-box">
+                <div class="summary-item"><span>Total Titik</span><b id="out-titik">0</b></div>
+                <div class="summary-item"><span>Waktu Kalkulasi</span><b id="out-waktu">0 ms</b></div>
+                <div class="summary-item"><span>Kerapatan</span><b id="out-visual">-</b></div>
+                <div class="summary-item"><span>Ukuran Node</span><b id="out-node">-</b></div>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table id="dataTable">
+                <thead id="tableHead"><tr><th>Status Standby</th></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const canvas1 = document.getElementById('canvas1'); const ctx1 = canvas1.getContext('2d');
+        const canvas2 = document.getElementById('canvas2'); const ctx2 = canvas2.getContext('2d');
+        const canvas3 = document.getElementById('canvas3'); const ctx3 = canvas3.getContext('2d');
+        const CANVAS_SIZE = 600; const CENTER = CANVAS_SIZE / 2;
+        
+        let currentBidang = 'lingkaran'; 
+        let currentAnimationId = 0;
+
+        const configBidang = {
+            lingkaran: `<div class="form-group"><label>Pusat Xc</label><input type="number" id="inp-xc" value="0" oninput="updateRumus()"></div><div class="form-group"><label>Pusat Yc</label><input type="number" id="inp-yc" value="0" oninput="updateRumus()"></div><div class="form-group full-width"><label>Jari-jari (R)</label><input type="number" id="inp-r" value="220" oninput="updateRumus()"></div><div class="form-group full-width"><label>Batas Sudut (Rad)</label><input type="number" id="inp-max-theta" value="6.28" step="0.01"></div>`,
+            elips: `<div class="form-group"><label>Pusat Xc</label><input type="number" id="inp-xc" value="0" oninput="updateRumus()"></div><div class="form-group"><label>Pusat Yc</label><input type="number" id="inp-yc" value="0" oninput="updateRumus()"></div><div class="form-group"><label>Sumbu (A)</label><input type="number" id="inp-a" value="250" oninput="updateRumus()"></div><div class="form-group"><label>Sumbu (B)</label><input type="number" id="inp-b" value="150" oninput="updateRumus()"></div><div class="form-group full-width"><label>Batas Sudut (Rad)</label><input type="number" id="inp-max-theta" value="6.28" step="0.01"></div>`,
+            parabola: `<div class="form-group"><label>Puncak Xp</label><input type="number" id="inp-xp" value="0" oninput="updateRumus()"></div><div class="form-group"><label>Puncak Yp</label><input type="number" id="inp-yp" value="-200" oninput="updateRumus()"></div><div class="form-group"><label>Faktor (A)</label><input type="number" id="inp-a" value="0.005" step="0.001" oninput="updateRumus()"></div><div class="form-group"><label>Rentang (T)</label><input type="number" id="inp-range-t" value="300"></div>`,
+            hyperbola: `<div class="form-group"><label>Pusat Xc</label><input type="number" id="inp-xc" value="0" oninput="updateRumus()"></div><div class="form-group"><label>Pusat Yc</label><input type="number" id="inp-yc" value="0" oninput="updateRumus()"></div><div class="form-group"><label>Jarak (A)</label><input type="number" id="inp-a" value="80" oninput="updateRumus()"></div><div class="form-group"><label>Asimtot (B)</label><input type="number" id="inp-b" value="60" oninput="updateRumus()"></div><div class="form-group full-width"><label>Batas (Rad)</label><input type="number" id="inp-max-theta" value="1.35" step="0.05"></div>`
+        };
+
+        function getVal(id, def) { const el = document.getElementById(id); return el ? (parseFloat(el.value) || def) : def; }
+
+        function updateRumus() {
+            let txt = "";
+            if (currentBidang === 'lingkaran') txt = `X = ${getVal('inp-xc',0)} + ${getVal('inp-r',220)} * cos(θ)<br>Y = ${getVal('inp-yc',0)} + ${getVal('inp-r',220)} * sin(θ)`;
+            else if (currentBidang === 'elips') txt = `X = ${getVal('inp-xc',0)} + ${getVal('inp-a',250)} * cos(θ)<br>Y = ${getVal('inp-yc',0)} + ${getVal('inp-b',150)} * sin(θ)`;
+            else if (currentBidang === 'parabola') txt = `X = ${getVal('inp-xp',0)} + t<br>Y = ${getVal('inp-yp',0)} + ${getVal('inp-a',0.005)} * t²`;
+            else if (currentBidang === 'hyperbola') txt = `X = ${getVal('inp-xc',0)} ± ${getVal('inp-a',80)} * (1/cos(θ))<br>Y = ${getVal('inp-yc',0)} + ${getVal('inp-b',60)} * tan(θ)`;
+            document.getElementById('rumus-display').innerHTML = txt;
+        }
+
+        function selectBidang(bidang, elemen) {
+            currentBidang = bidang;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            elemen.classList.add('active');
+            document.getElementById('form-inputs').innerHTML = configBidang[currentBidang];
+            
+            let h = '';
+            if(bidang === 'lingkaran' || bidang === 'elips' || bidang === 'hyperbola') h = `<tr><th>#</th><th>θ (Rad)</th><th>Rumus Aktual</th><th>Koordinat</th></tr>`;
+            else h = `<tr><th>#</th><th>t (Step)</th><th>Rumus Aktual</th><th>Koordinat</th></tr>`;
+            document.getElementById('tableHead').innerHTML = h;
+            document.getElementById('tableBody').innerHTML = '';
+            updateRumus();
+        }
+
+        function clearAllCanvas() {
+            currentAnimationId++; // Stop ongoing animation
+            [ctx1, ctx2, ctx3].forEach(ctx => drawGrid(ctx, CANVAS_SIZE, CANVAS_SIZE));
+            document.getElementById('tableBody').innerHTML = '';
+            document.getElementById('out-titik').innerText = '0';
+            document.getElementById('out-waktu').innerText = '0 ms';
+            document.getElementById('out-visual').innerText = '-';
+            document.getElementById('out-node').innerText = '-';
+        }
+
+        function exportCanvas() {
+            // Mengunduh Canvas 3 (Hasil kurva akhir)
+            const link = document.createElement('a');
+            link.download = `Kurva_${currentBidang}_${Date.now()}.png`;
+            link.href = canvas3.toDataURL('image/png');
+            link.click();
+        }
+
+        function drawGrid(ctx, w, h) {
+            ctx.clearRect(0, 0, w, h); 
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)'; ctx.lineWidth = 1;
+            // Lingkaran panduan grid
+            for(let r=50; r<w; r+=50) { ctx.beginPath(); ctx.arc(CENTER, CENTER, r, 0, 2*Math.PI); ctx.stroke(); }
+            
+            // SUMBU KARTESIAN (X & Y) EKSPLISIT (Sesuai rubrik wajib)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(0, CENTER); ctx.lineTo(w, CENTER); ctx.stroke(); 
+            ctx.beginPath(); ctx.moveTo(CENTER, 0); ctx.lineTo(CENTER, h); ctx.stroke(); 
+            
+            // Label Koordinat Sumbu
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; ctx.font = '10px "Segoe UI"';
+            ctx.fillText("(0,0)", CENTER + 5, CENTER + 15);
+            ctx.fillText("+X", w - 20, CENTER - 10);
+            ctx.fillText("-X", 5, CENTER - 10);
+            ctx.fillText("+Y", CENTER + 10, 15);
+            ctx.fillText("-Y", CENTER + 10, h - 5);
+        }
+
+        function hitungKordinat(bidang, stepVal) {
+            let pts = []; 
+            if(bidang === 'lingkaran'){ 
+                const xc = getVal('inp-xc',0); const yc = getVal('inp-yc',0); const r = getVal('inp-r',220); const maxT = getVal('inp-max-theta',6.28);
+                for(let t=0; t<=maxT; t+=stepVal) {
+                    let calcX = xc + r*Math.cos(t); let calcY = yc + r*Math.sin(t);
+                    pts.push({x:calcX, y:calcY, rowStr: `<td>${t.toFixed(2)}</td><td class="col-sub">X = ${xc} + ${r} * cos(${t.toFixed(2)})<br>Y = ${yc} + ${r} * sin(${t.toFixed(2)})</td>`});
+                }
+            }
+            else if(bidang === 'elips'){ 
+                const xc = getVal('inp-xc',0); const yc = getVal('inp-yc',0); const a = getVal('inp-a',250); const b = getVal('inp-b',150); const maxT = getVal('inp-max-theta',6.28);
+                for(let t=0; t<=maxT; t+=stepVal) {
+                    let calcX = xc + a*Math.cos(t); let calcY = yc + b*Math.sin(t);
+                    pts.push({x:calcX, y:calcY, rowStr: `<td>${t.toFixed(2)}</td><td class="col-sub">X = ${xc} + ${a} * cos(${t.toFixed(2)})<br>Y = ${yc} + ${b} * sin(${t.toFixed(2)})</td>`});
+                }
+            }
+            else if(bidang === 'parabola'){ 
+                const xp = getVal('inp-xp',0); const yp = getVal('inp-yp',0); const a = getVal('inp-a',0.005); const rt = getVal('inp-range-t',300);
+                let stepParabola = stepVal >= 1 ? stepVal : stepVal * rt; 
+                if (stepParabola <= 0.1) stepParabola = 0.5; // Validasi anti freeze
+
+                for(let t=-rt; t<=rt; t+=stepParabola) {
+                    let calcX = xp + t; let calcY = yp + (a*t*t);
+                    pts.push({x:calcX, y:calcY, rowStr: `<td>${t.toFixed(1)}</td><td class="col-sub">X = ${xp} + ${t.toFixed(1)}<br>Y = ${yp} + ${a} * (${t.toFixed(1)})²</td>`});
+                }
+            }
+            else if(bidang === 'hyperbola'){ 
+                const xc = getVal('inp-xc',0); const yc = getVal('inp-yc',0); const a = getVal('inp-a',80); const b = getVal('inp-b',60); const maxT = getVal('inp-max-theta',1.35);
+                for(let t=-maxT; t<=maxT; t+=stepVal) {
+                    let calcX = xc + a*(1/Math.cos(t)); let calcY = yc + b*Math.tan(t);
+                    pts.push({x:calcX, y:calcY, rowStr: `<td>${t.toFixed(2)}</td><td class="col-sub">X = ${xc} + ${a} * (1/cos(${t.toFixed(2)}))<br>Y = ${yc} + ${b} * tan(${t.toFixed(2)})</td>`});
+                }
+                if(pts.length>0) pts[pts.length-1].breakLine = true;
+                for(let t=-maxT; t<=maxT; t+=stepVal) {
+                    let calcX = xc - a*(1/Math.cos(t)); let calcY = yc + b*Math.tan(t);
+                    pts.push({x:calcX, y:calcY, rowStr: `<td>${t.toFixed(2)}</td><td class="col-sub">X = ${xc} - ${a} * (1/cos(${t.toFixed(2)}))<br>Y = ${yc} + ${b} * tan(${t.toFixed(2)})</td>`});
+                }
+            }
+            return pts;
+        }
+
+        async function renderEngine() {
+            clearAllCanvas(); // Otomatis bersih saat dirender ulang
+            
+            let stepUser = getVal('param-step', 0.01); 
+            if(stepUser <= 0.001) stepUser = 0.01; // Cegah browser freeze karena loop infinitif
+            
+            const tBody = document.getElementById('tableBody');
+            
+            const t0 = performance.now();
+            let userPoints = hitungKordinat(currentBidang, stepUser);
+            const t1 = performance.now();
+            
+            document.getElementById('out-waktu').innerText = `${(t1 - t0).toFixed(2)} ms`;
+            document.getElementById('out-titik').innerText = userPoints.length;
+            
+            let radiusC1 = 4; let showTextC1 = true;
+            
+            if(userPoints.length > 500) { 
+                document.getElementById('out-visual').innerText = "SANGAT RAPAT"; document.getElementById('out-visual').style.color = "#10b981";
+                radiusC1 = 1.5; showTextC1 = false;
+            } else if(userPoints.length > 100) { 
+                document.getElementById('out-visual').innerText = "RAPAT / MULUS"; document.getElementById('out-visual').style.color = "#38bdf8"; 
+                radiusC1 = 2; showTextC1 = false;
+            } else { 
+                document.getElementById('out-visual').innerText = "KASAR / TERPISAH"; document.getElementById('out-visual').style.color = "#fbbf24"; 
+                radiusC1 = 4; showTextC1 = true;
+            }
+
+            document.getElementById('out-node').innerText = `Radius ${radiusC1}px`;
+
+            let animId = currentAnimationId;
+            jalankanProsesAman(userPoints, animId, tBody, radiusC1, showTextC1);
+        }
+
+        function jalankanProsesAman(points, animId, tBody, rC1, showText) {
+            ctx2.strokeStyle = '#10b981'; ctx2.lineWidth = 1.5;
+            ctx3.strokeStyle = '#38bdf8'; ctx3.lineWidth = 2.5; 
+            
+            let isFirst = true; let prevX = 0, prevY = 0; let validIdx = 1;
+            let i = 0;
+            let CHUNK_SIZE = points.length > 2000 ? 200 : (points.length > 500 ? 50 : 10);
+            
+            function processChunk() {
+                if (currentAnimationId !== animId) return;
+                
+                let limit = Math.min(i + CHUNK_SIZE, points.length);
+                let tableHtml = "";
+
+                for (; i < limit; i++) {
+                    let p = points[i];
+                    if(p.y > 3000 || p.y < -3000) { isFirst = true; continue; }
+
+                    const screenX = CENTER + p.x; const screenY = CENTER - p.y;
+
+                    // NODE SPASIAL
+                    ctx1.fillStyle = '#fbbf24'; ctx1.beginPath(); ctx1.arc(screenX, screenY, rC1, 0, Math.PI*2); ctx1.fill();
+
+                    if(!p.breakLine) {
+                        if(showText) {
+                            ctx1.fillStyle = '#94a3b8'; ctx1.font = '9px "Courier New", monospace'; ctx1.textAlign = 'center';
+                            ctx1.fillText(`${p.x.toFixed(0)}, ${p.y.toFixed(0)}`, screenX, screenY + 12);
+                        }
+                        
+                        if (validIdx <= 1000) {
+                            let rowClass = (validIdx % 2 === 0) ? 'row-alt' : '';
+                            tableHtml += `<tr class="${rowClass}"><td>${validIdx}</td>${p.rowStr}<td class="col-res">X:${p.x.toFixed(2)}<br>Y:${p.y.toFixed(2)}</td></tr>`;
+                        } else if (validIdx === 1001) {
+                            tableHtml += `<tr><td colspan="4" style="text-align:center; color:#ef4444; padding: 10px;">[Data tabel dipotong... Maksimal 1000 baris ditampilkan]</td></tr>`;
+                        }
+                        validIdx++;
+                    }
+
+                    // RASTER
+                    ctx2.fillStyle = '#10b981'; ctx2.beginPath(); ctx2.arc(screenX, screenY, rC1 === 1.5 ? 0.5 : 2, 0, Math.PI*2); ctx2.fill();
+                    
+                    // KONTINU (GARIS UTAMA)
+                    if (isFirst) { prevX = screenX; prevY = screenY; isFirst = false; } 
+                    else {
+                        ctx2.beginPath(); ctx2.moveTo(prevX, prevY); ctx2.lineTo(screenX, screenY); ctx2.stroke();
+                        ctx3.beginPath(); ctx3.moveTo(prevX, prevY); ctx3.lineTo(screenX, screenY); ctx3.stroke();
+                        prevX = screenX; prevY = screenY;
+                    }
+                    if (p.breakLine) isFirst = true;
+                }
+                
+                if(tableHtml) tBody.insertAdjacentHTML('beforeend', tableHtml);
+                
+                if (i < points.length) {
+                    if (points.length <= 150) setTimeout(processChunk, 10); else requestAnimationFrame(processChunk); 
+                } else {
+                    tBody.parentElement.parentElement.scrollTop = tBody.parentElement.parentElement.scrollHeight;
+                }
+            }
+            processChunk();
+        }
+
+            window.onload = () => { 
+            selectBidang('lingkaran', document.querySelector('.tab-btn')); 
+            clearAllCanvas(); 
+        };
+    </script>
+</body>
+</html>
